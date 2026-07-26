@@ -6,6 +6,20 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#EAE0C8">
+<meta name="description" content="Convivium: sechs historische Gastmähler zum Nachkochen — vom antiken Athen über Rom, Wikinger-Haithabu und Mittelalter bis zur Renaissance. Mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht.">
+<meta name="keywords" content="historisches Kochen, Living History, Reenactment Rezepte, mittelalterliche Rezepte, antikes Rom Rezepte, Wikinger Essen, Renaissance Rezepte, Gastmahl, Dutch Oven Rezepte">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://convivium.afien1987.workers.dev/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Convivium — Eine kulinarische Zeitreise">
+<meta property="og:description" content="Sechs historische Gastmähler zum Nachkochen, mit Quellenangaben, Einkaufsliste und Zeitplan: Antikes Griechenland, Rom, Haithabu, Hoch- & Spätmittelalter, Renaissance.">
+<meta property="og:url" content="https://convivium.afien1987.workers.dev/">
+<meta property="og:image" content="https://convivium.afien1987.workers.dev/icon-512.png">
+<meta property="og:locale" content="de_DE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Convivium — Eine kulinarische Zeitreise">
+<meta name="twitter:description" content="Sechs historische Gastmähler zum Nachkochen, mit Quellenangaben, Einkaufsliste und Zeitplan.">
+<meta name="twitter:image" content="https://convivium.afien1987.workers.dev/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -37,6 +51,10 @@
   }
   h1,h2,h3,.display{font-family:'Cormorant Garamond', serif;}
   .mono{font-family:'JetBrains Mono', monospace; letter-spacing:0.02em;}
+  #seo-fallback{ max-width:640px; margin:0 auto; padding:24px 20px; }
+  #seo-fallback h1{ font-size:28px; margin:0 0 10px; }
+  #seo-fallback p{ font-size:15px; color:var(--ink-soft); line-height:1.5; }
+  #seo-fallback ul{ padding-left:20px; line-height:1.6; }
   #app{max-width:640px; margin:0 auto; padding:0 0 60px;}
 
   /* ---- Header ---- */
@@ -314,12 +332,54 @@
     text-align:center; color:var(--ink-soft); font-size:12.5px; padding:26px 30px 10px;
     line-height:1.5;
   }
+  .kofi-link{
+    display:inline-block; margin-top:12px; color:var(--ink-soft); font-size:12.5px;
+    text-decoration:none; border-bottom:1px dotted var(--line);
+  }
+  .kofi-link:hover{ color:var(--ink); }
 </style>
 </head>
 <body>
+<div id="seo-fallback">
+  <h1>Convivium — Eine kulinarische Zeitreise</h1>
+  <p>Sechs historische Gastmähler zum Nachkochen, mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht — von der griechischen Antike bis zur Renaissance.</p>
+  <ul>
+    <li><strong>Deipnon Attikon</strong> (Athen, ca. 400 v. Chr.) — Linsensuppe, Kandaulos und gebackener Fisch nach Athenaios und Archestratos.</li>
+    <li><strong>Cena Rustica Romana</strong> (Rom, ca. 100–200 n. Chr.) — Kräuterkäse, Hähnchen mit Oliven und Garum, nach Apicius.</li>
+    <li><strong>Ein Gelage in Haithabu</strong> (Wikingerzeit, ca. 950 n. Chr.) — Kräuter-Skyr, Lammeintopf und Wurzelgemüse nach archäologischen Funden.</li>
+    <li><strong>Gastmahl im Hochmittelalter</strong> (ca. 1200) — Kräuterkäse, Huhn in Mandel-Wein-Sauce mit Pfeffer und Ingwer.</li>
+    <li><strong>Gastmahl im Spätmittelalter</strong> (Hansestadt, ca. 1450) — Martinsgans nach dem "Buch von guter Speise".</li>
+    <li><strong>Gastmahl der Renaissance</strong> (ca. 1580) — Kalbsbraten und Salat nach Marx Rumpolts "Ein new Kochbuch".</li>
+  </ul>
+  <p>Kostenlos nutzbar, installierbar als App auf dem Smartphone.</p>
+</div>
 <div id="app"></div>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Convivium",
+  "alternateName": "Convivium — Eine kulinarische Zeitreise",
+  "description": "Sechs historische Gastmähler zum Nachkochen, mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht — von der griechischen Antike bis zur Renaissance.",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "inLanguage": "de",
+  "hasPart": [
+    { "@type": "CreativeWork", "name": "Deipnon Attikon", "description": "Antikes Griechenland, ca. 400 v. Chr." },
+    { "@type": "CreativeWork", "name": "Cena Rustica Romana", "description": "Antikes Rom, ca. 100–200 n. Chr." },
+    { "@type": "CreativeWork", "name": "Ein Gelage in Haithabu", "description": "Wikingerzeit, ca. 950 n. Chr." },
+    { "@type": "CreativeWork", "name": "Gastmahl im Hochmittelalter", "description": "ca. 1200" },
+    { "@type": "CreativeWork", "name": "Gastmahl im Spätmittelalter", "description": "Hansestadt, ca. 1450" },
+    { "@type": "CreativeWork", "name": "Gastmahl der Renaissance", "description": "ca. 1580" }
+  ]
+}
+</script>
 
 <script>
+const seoFallback = document.getElementById('seo-fallback');
+if(seoFallback) seoFallback.remove();
+
 const MENUS = [
   {
     id:'griechenland',
@@ -1004,7 +1064,9 @@ function renderHome(){
     `;
   });
   html += `</div>
-    <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Convivium wie eine eigene App.</div>
+    <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Convivium wie eine eigene App.
+      <br><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Convivium? Kauf mir einen Kaffee</a>
+    </div>
   `;
   appEl.innerHTML = html;
 
@@ -1385,6 +1447,7 @@ function renderGuest(){
       <div class="guest-actions">
         <button class="btn" id="shareBtn" style="border-color:${menu.accent}; color:${menu.accent};">Teilen</button>
       </div>
+      <div class="footer-note"><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Convivium? Kauf mir einen Kaffee</a></div>
     </div>
   `;
   appEl.innerHTML = html;
