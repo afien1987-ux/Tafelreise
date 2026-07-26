@@ -106,10 +106,10 @@
 
   /* ---- Detail ---- */
   .settings-bar{
-    display:flex; gap:10px; margin:16px 20px 0; padding:12px 14px;
+    display:flex; flex-wrap:wrap; gap:10px; margin:16px 20px 0; padding:12px 14px;
     background:var(--card); border:1px solid var(--line); border-radius:2px;
   }
-  .settings-field{flex:1; display:flex; flex-direction:column; gap:4px;}
+  .settings-field{flex:1; min-width:110px; display:flex; flex-direction:column; gap:4px;}
   .settings-field label{
     font-family:'JetBrains Mono', monospace; font-size:10.5px; letter-spacing:0.08em;
     text-transform:uppercase; color:var(--ink-soft);
@@ -258,6 +258,21 @@
     color:var(--ink); resize:vertical; line-height:1.5;
   }
   .modal-actions{margin-top:14px; display:flex; gap:10px; justify-content:flex-end;}
+
+  /* ---- Küchenmodus ---- */
+  body.kitchen-mode{ font-size:19px; }
+  body.kitchen-mode .step-text{ font-size:1.15em; line-height:1.5; }
+  body.kitchen-mode .checkbox{ width:30px; height:30px; }
+  body.kitchen-mode .checkbox.done::after{ font-size:17px; }
+  body.kitchen-mode .timeline-body h5{ font-size:1.2em; }
+  body.kitchen-mode .timeline-body p{ font-size:1.1em; }
+  body.kitchen-mode .time-mark{ font-size:1.1em; }
+  body.kitchen-mode .focus-card h3{ font-size:32px; }
+  body.kitchen-mode .focus-card p{ font-size:1.25em; }
+  body.kitchen-mode .timer-display{ font-size:44px; }
+  body.kitchen-mode .btn{ font-size:1.05em; padding:13px 22px; }
+  body.kitchen-mode .dish-block h4{ font-size:1.2em; }
+  body.kitchen-mode .ingredients{ font-size:1.05em; }
   .actions-row{display:flex; flex-wrap:wrap; gap:10px; padding:14px 20px 4px; justify-content:center;}
   .footer-note{
     text-align:center; color:var(--ink-soft); font-size:12.5px; padding:26px 30px 10px;
@@ -532,16 +547,49 @@ const MENUS = [
 // ---------- state ----------
 const BASE_PERSONEN = 9; // Basis laut Originalrezept (Cena Rustica Romana: "für neun Gäste")
 const BASE_ESSENZEIT = '16:00';
+function todayISODate(){
+  const d = new Date();
+  const pad = n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function formatDateDE(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
 
 let state = {
   view:'home', // home | detail
   menuId:null,
   tab:'vortag', // vortag | tag | focus
-  focusIdx:0
+  focusIdx:0,
+  kitchenMode: localStorage.getItem('kitchenMode')==='1'
 };
 let progressCache = {}; // menuId -> Set of completed keys
 let settingsCache = {}; // menuId -> {personen, essenzeit}
 let shoppingCache = {}; // menuId -> Set of checked ingredient keys
+
+// ---------- Küchenmodus (Bildschirm bleibt an, größere Schrift) ----------
+let wakeLock = null;
+async function enableWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){ console.error('Wake Lock nicht verfügbar', e); }
+}
+function disableWakeLock(){
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
+}
+document.addEventListener('visibilitychange', async ()=>{
+  if(state.kitchenMode && document.visibilityState==='visible' && !wakeLock){
+    await enableWakeLock();
+  }
+});
+if(state.kitchenMode){
+  document.body.classList.add('kitchen-mode');
+  enableWakeLock();
+}
 
 async function loadShopping(menuId){
   if(shoppingCache[menuId]) return shoppingCache[menuId];
@@ -631,6 +679,52 @@ function shoppingList(menu, factor){
   }));
 }
 
+// Parst ein rohes (unskaliertes) Zutaten-Segment in {amount, unit, name}
+function parseIngredientRaw(seg){
+  const s = seg.trim();
+  const re = /^(?:ca\.\s*)?(\d+(?:[.,]\d+)?)(?:\s*[–-]\s*(\d+(?:[.,]\d+)?))?\s*(g|kg|ml|l|EL|TL)?\s*(.*)$/i;
+  const m = re.exec(s);
+  if(m && m[4] && m[4].trim().length>0){
+    const toNum = v => parseFloat(v.replace(',', '.'));
+    const n1 = toNum(m[1]);
+    const n2 = m[2] ? toNum(m[2]) : null;
+    const amount = n2!=null ? (n1+n2)/2 : n1;
+    const unit = m[3] || '';
+    return { amount, unit, name: m[4].trim() };
+  }
+  return { amount:null, unit:'', name:s };
+}
+
+function consolidatedShoppingList(menu, factor){
+  const map = new Map();
+  const order = [];
+  menu.prep.forEach((d, di)=>{
+    d.ing.split('·').forEach((seg, si)=>{
+      const p = parseIngredientRaw(seg);
+      const nameCore = p.name.split(/[,(]/)[0].trim();
+      const key = nameCore.toLowerCase()+'|'+p.unit.toLowerCase();
+      if(!map.has(key)){
+        map.set(key, { name:nameCore, unit:p.unit, amountSum: p.amount, hasAmount: p.amount!=null, keys:[] });
+        order.push(key);
+      } else if(p.amount!=null){
+        const entry = map.get(key);
+        entry.amountSum = entry.hasAmount ? entry.amountSum + p.amount : p.amount;
+        entry.hasAmount = true;
+      }
+      map.get(key).keys.push(ingKey(di, si));
+    });
+  });
+  const items = order.map(key=>{
+    const e = map.get(key);
+    const text = e.hasAmount
+      ? `${formatNum(e.amountSum*factor)}${e.unit ? ' '+e.unit : ''} ${e.name}`
+      : e.name;
+    return { key:'m-'+e.keys.join('_'), text };
+  });
+  items.sort((a,b)=> a.text.localeCompare(b.text, 'de'));
+  return items;
+}
+
 // ---------- Fokus-Timer ----------
 let timerState = { key:null, remaining:0, total:0, handle:null };
 
@@ -692,9 +786,10 @@ function icsDateStamp(date){
   const pad = n=>String(n).padStart(2,'0');
   return date.getFullYear()+pad(date.getMonth()+1)+pad(date.getDate())+'T'+pad(date.getHours())+pad(date.getMinutes())+'00';
 }
-function generateICS(menu, offset){
+function generateICS(menu, offset, datumStr){
   const now = new Date();
-  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const [y,mo,d] = (datumStr||todayISODate()).split('-').map(Number);
+  const base = new Date(y, mo-1, d);
   let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Convivium//Gastmahl//DE\r\nCALSCALE:GREGORIAN\r\n';
   menu.timeline.forEach((row, i)=>{
     const t = shiftTime(row.t, offset);
@@ -714,8 +809,8 @@ function generateICS(menu, offset){
   ics += 'END:VCALENDAR\r\n';
   return ics;
 }
-function downloadICS(menu, offset){
-  const ics = generateICS(menu, offset);
+function downloadICS(menu, offset, datumStr){
+  const ics = generateICS(menu, offset, datumStr);
   const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -775,11 +870,12 @@ function shiftTime(t, offset){
 
 async function loadSettings(menuId){
   if(settingsCache[menuId]) return settingsCache[menuId];
+  const defaults = {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT, datum:todayISODate()};
   try{
     const raw = localStorage.getItem('settings:'+menuId);
-    settingsCache[menuId] = raw ? JSON.parse(raw) : {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT};
+    settingsCache[menuId] = raw ? Object.assign({}, defaults, JSON.parse(raw)) : defaults;
   }catch(e){
-    settingsCache[menuId] = {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT};
+    settingsCache[menuId] = defaults;
   }
   return settingsCache[menuId];
 }
@@ -888,7 +984,7 @@ function renderHome(){
 function renderDetail(){
   const menu = MENUS.find(m=>m.id===state.menuId);
   const set = progressCache[menu.id] || new Set();
-  const settings = settingsCache[menu.id] || {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT};
+  const settings = settingsCache[menu.id] || {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT, datum:todayISODate()};
   const pct = pctFor(menu);
   const factor = settings.personen / BASE_PERSONEN;
   const offset = parseTimeStr(settings.essenzeit) - parseTimeStr(BASE_ESSENZEIT);
@@ -900,12 +996,17 @@ function renderDetail(){
         <div class="topbar-title">${menu.title}</div>
         <div class="topbar-sub">${menu.era} · ${pct}% erledigt</div>
       </div>
+      <button class="btn" id="kitchenModeBtn" style="border-color:${menu.accent}; color:${state.kitchenMode?'#F3ECD8':menu.accent}; background:${state.kitchenMode?menu.accent:'none'}; padding:8px 10px; font-size:11px;">${state.kitchenMode?'🔆 An':'🔆 Küche'}</button>
       <button class="btn" id="guestModeBtn" style="border-color:${menu.accent}; color:${menu.accent}; padding:8px 12px; font-size:11px;">Gäste-Ansicht</button>
     </div>
     <div class="settings-bar" style="--accent:${menu.accent}">
       <div class="settings-field">
         <label for="personenInput">Personen</label>
         <input type="number" id="personenInput" min="1" max="60" value="${settings.personen}">
+      </div>
+      <div class="settings-field">
+        <label for="datumInput">Datum</label>
+        <input type="date" id="datumInput" value="${settings.datum}">
       </div>
       <div class="settings-field">
         <label for="essenzeitInput">Essenzeit</label>
@@ -959,7 +1060,7 @@ function renderDetail(){
     html += `
       <div class="ics-row">
         <button class="btn" id="icsBtn" style="width:100%; border-color:${menu.accent}; color:${menu.accent};">Alarme im Kalender anlegen</button>
-        <div class="settings-note" style="margin:8px 0 0;">Lädt eine Kalenderdatei mit Erinnerung zu jedem Schritt herunter — dein Handy kann keine echten System-Alarme direkt aus dem Browser stellen, aber der Kalender benachrichtigt dich zuverlässig zur richtigen Zeit.</div>
+        <div class="settings-note" style="margin:8px 0 0;">Lädt eine Kalenderdatei mit Erinnerung zu jedem Schritt herunter, für den ${formatDateDE(settings.datum)}. Dein Handy kann keine echten System-Alarme direkt aus dem Browser stellen, aber der Kalender benachrichtigt dich zuverlässig zur richtigen Zeit.</div>
       </div>
     `;
   } else if(state.tab==='focus'){
@@ -999,23 +1100,19 @@ function renderDetail(){
     }
   } else if(state.tab==='einkauf'){
     const shopSet = shoppingCache[menu.id] || new Set();
-    const groups = shoppingList(menu, factor);
-    html += `<div class="section-block" style="--accent:${menu.accent}">`;
-    groups.forEach(g=>{
-      html += `<div class="dish-block"><h4>${g.dish}</h4>`;
-      g.items.forEach(item=>{
-        const done = shopSet.has(item.key);
-        html += `
-          <div class="step-row">
-            <div class="checkbox shop-checkbox ${done?'done':''}" data-key="${item.key}" style="--accent:${menu.accent}"></div>
-            <div class="step-text shop-text ${done?'done':''}" data-key="${item.key}">${item.text}</div>
-          </div>
-        `;
-      });
-      html += `</div>`;
+    const items = consolidatedShoppingList(menu, factor);
+    html += `<div class="section-block" style="--accent:${menu.accent}"><div class="dish-block">`;
+    items.forEach(item=>{
+      const done = shopSet.has(item.key);
+      html += `
+        <div class="step-row">
+          <div class="checkbox shop-checkbox ${done?'done':''}" data-key="${item.key}" style="--accent:${menu.accent}"></div>
+          <div class="step-text shop-text ${done?'done':''}" data-key="${item.key}">${item.text}</div>
+        </div>
+      `;
     });
-    html += `</div>
-      <div class="settings-note" style="margin-top:2px;">Mengen sind je Gericht aufgeführt — gleiche Zutaten aus mehreren Gerichten ggf. addieren.</div>`;
+    html += `</div></div>
+      <div class="settings-note" style="margin-top:2px;">Gleiche Zutaten aus mehreren Gerichten sind bereits zusammengefasst.</div>`;
   } else if(state.tab==='quellen'){
     html += `<div class="section-block" style="--accent:${menu.accent}">
       <div class="score-badge">Quellenlage · ${menu.score}</div>
@@ -1057,8 +1154,16 @@ function renderDetail(){
   if(guestModeBtn) guestModeBtn.addEventListener('click', ()=>{
     state.view='guest'; render();
   });
+  const kitchenModeBtn = document.getElementById('kitchenModeBtn');
+  if(kitchenModeBtn) kitchenModeBtn.addEventListener('click', async ()=>{
+    state.kitchenMode = !state.kitchenMode;
+    localStorage.setItem('kitchenMode', state.kitchenMode ? '1' : '0');
+    document.body.classList.toggle('kitchen-mode', state.kitchenMode);
+    if(state.kitchenMode) await enableWakeLock(); else disableWakeLock();
+    render();
+  });
   const icsBtn = document.getElementById('icsBtn');
-  if(icsBtn) icsBtn.addEventListener('click', ()=> downloadICS(menu, offset));
+  if(icsBtn) icsBtn.addEventListener('click', ()=> downloadICS(menu, offset, settings.datum));
   document.querySelectorAll('.tab').forEach(t=>{
     t.addEventListener('click', ()=>{
       state.tab = t.dataset.tab; render();
@@ -1074,7 +1179,13 @@ function renderDetail(){
     el.addEventListener('click', ()=> toggleStep(menu, el.dataset.key));
   });
   const personenInput = document.getElementById('personenInput');
+  const datumInput = document.getElementById('datumInput');
   const essenzeitInput = document.getElementById('essenzeitInput');
+  if(datumInput) datumInput.addEventListener('change', async (e)=>{
+    settingsCache[menu.id].datum = e.target.value || todayISODate();
+    await saveSettings(menu.id);
+    render();
+  });
   if(personenInput) personenInput.addEventListener('change', async (e)=>{
     let v = parseInt(e.target.value, 10);
     if(!v || v<1) v = 1;
@@ -1102,13 +1213,9 @@ function renderDetail(){
   });
   const copyListBtn = document.getElementById('copyListBtn');
   if(copyListBtn) copyListBtn.addEventListener('click', async ()=>{
-    const groups = shoppingList(menu, factor);
+    const items = consolidatedShoppingList(menu, factor);
     let text = `Einkaufsliste — ${menu.title} (${settings.personen} Personen)\n\n`;
-    groups.forEach(g=>{
-      text += `${g.dish}\n`;
-      g.items.forEach(item=> text += `- ${item.text}\n`);
-      text += '\n';
-    });
+    items.forEach(item=> text += `- ${item.text}\n`);
     const result = await shareOrCopy('Einkaufsliste — '+menu.title, text);
     if(result==='copied' || result==='shared'){
       copyListBtn.textContent = 'Kopiert ✓';
@@ -1142,7 +1249,7 @@ function renderDetail(){
 
 function renderGuest(){
   const menu = MENUS.find(m=>m.id===state.menuId);
-  const settings = settingsCache[menu.id] || {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT};
+  const settings = settingsCache[menu.id] || {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT, datum:todayISODate()};
   const offset = parseTimeStr(settings.essenzeit) - parseTimeStr(BASE_ESSENZEIT);
   const mealTime = shiftTime('16:00', offset);
   const numerals = ['I','II','III','IV','V','VI'];
@@ -1153,7 +1260,7 @@ function renderGuest(){
       <div><div class="topbar-title">Gäste-Ansicht</div><div class="topbar-sub">${menu.era}</div></div>
     </div>
     <div class="guest-page" style="--accent:${menu.accent}">
-      <div class="era">${menu.era} · Essenzeit ${mealTime} Uhr</div>
+      <div class="era">${menu.era} · ${formatDateDE(settings.datum)} · ${mealTime} Uhr</div>
       <h1>${menu.title}</h1>
       <p class="sub">${menu.sub}</p>
       <div class="guest-divider"></div>
@@ -1183,7 +1290,7 @@ function renderGuest(){
   if(shareBtn) shareBtn.addEventListener('click', async ()=>{
     let text = `${menu.title}\n${menu.sub}\n\n`;
     menu.courses.forEach((c,i)=>{ text += `${numerals[i]||(i+1)}. ${c.name} — ${c.desc}\n`; });
-    text += `\nEssenzeit: ${mealTime} Uhr`;
+    text += `\n${formatDateDE(settings.datum)}, ${mealTime} Uhr`;
     const result = await shareOrCopy(menu.title, text);
     if(result==='copied'){
       shareBtn.textContent = 'Kopiert ✓';
@@ -1199,6 +1306,14 @@ function render(){
 }
 
 render();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(e=>{
+      console.error('Service-Worker-Registrierung fehlgeschlagen', e);
+    });
+  });
+}
 </script>
 </body>
 </html>
