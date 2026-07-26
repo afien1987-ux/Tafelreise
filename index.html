@@ -257,6 +257,42 @@
     padding:10px; border:1px solid var(--line); border-radius:2px; background:var(--parchment);
     color:var(--ink); resize:vertical; line-height:1.5;
   }
+  .overflow-btn{
+    background:none; border:1px solid var(--line); color:var(--ink);
+    width:36px; height:36px; border-radius:50%; font-size:20px; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .overflow-menu{
+    position:fixed; top:64px; right:20px; z-index:150; min-width:210px;
+    background:var(--card); border:1px solid var(--line); border-radius:4px;
+    box-shadow:0 8px 24px rgba(43,36,28,0.28); overflow:hidden;
+  }
+  .overflow-item{
+    padding:14px 16px; font-size:14.5px; cursor:pointer; border-top:1px solid var(--line);
+  }
+  .overflow-item:first-child{ border-top:none; }
+  .overflow-item:active{ background:var(--parchment); }
+
+  .focus-cta{
+    margin:16px 20px; padding:20px; text-align:center;
+    background:var(--card); border:1px solid var(--line); border-radius:2px;
+  }
+  .focus-cta p{ margin:0 0 14px; font-size:14.5px; color:var(--ink-soft); }
+  .focus-cta .btn.primary{ width:100%; padding:14px; font-size:15px; }
+
+  .section-heading{
+    margin:22px 20px 8px; font-family:'JetBrains Mono', monospace; font-size:11.5px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft);
+  }
+
+  .date-warning{
+    margin:8px 20px 0; font-size:12.5px; font-weight:600; color:#7A2E2E;
+  }
+
+  .context-line{
+    margin:14px 20px 0; font-size:13px; color:var(--ink-soft);
+    font-family:'JetBrains Mono', monospace;
+  }
   .modal-actions{margin-top:14px; display:flex; gap:10px; justify-content:flex-end;}
 
   /* ---- Küchenmodus ---- */
@@ -561,9 +597,10 @@ function formatDateDE(iso){
 let state = {
   view:'home', // home | detail
   menuId:null,
-  tab:'vortag', // vortag | tag | focus
+  tab:'ablauf', // ablauf | einkauf | quellen
   focusIdx:0,
-  kitchenMode: localStorage.getItem('kitchenMode')==='1'
+  kitchenMode: localStorage.getItem('kitchenMode')==='1',
+  overflowOpen: false
 };
 let progressCache = {}; // menuId -> Set of completed keys
 let settingsCache = {}; // menuId -> {personen, essenzeit}
@@ -975,7 +1012,7 @@ function renderHome(){
     card.addEventListener('click', async ()=>{
       const id = card.dataset.menu;
       await Promise.all([loadProgress(id), loadSettings(id), loadShopping(id)]);
-      state.view='detail'; state.menuId=id; state.tab='vortag'; state.focusIdx=0;
+      state.view='detail'; state.menuId=id; state.tab='ablauf'; state.focusIdx=0;
       render();
     });
   });
@@ -988,6 +1025,7 @@ function renderDetail(){
   const pct = pctFor(menu);
   const factor = settings.personen / BASE_PERSONEN;
   const offset = parseTimeStr(settings.essenzeit) - parseTimeStr(BASE_ESSENZEIT);
+  const isPast = settings.datum < todayISODate();
 
   let html = `
     <div class="topbar" style="--accent:${menu.accent}">
@@ -996,35 +1034,65 @@ function renderDetail(){
         <div class="topbar-title">${menu.title}</div>
         <div class="topbar-sub">${menu.era} · ${pct}% erledigt</div>
       </div>
-      <button class="btn" id="kitchenModeBtn" style="border-color:${menu.accent}; color:${state.kitchenMode?'#F3ECD8':menu.accent}; background:${state.kitchenMode?menu.accent:'none'}; padding:8px 10px; font-size:11px;">${state.kitchenMode?'🔆 An':'🔆 Küche'}</button>
-      <button class="btn" id="guestModeBtn" style="border-color:${menu.accent}; color:${menu.accent}; padding:8px 12px; font-size:11px;">Gäste-Ansicht</button>
+      <button class="overflow-btn" id="overflowBtn">⋮</button>
     </div>
-    <div class="settings-bar" style="--accent:${menu.accent}">
-      <div class="settings-field">
-        <label for="personenInput">Personen</label>
-        <input type="number" id="personenInput" min="1" max="60" value="${settings.personen}">
+  `;
+
+  if(state.overflowOpen){
+    html += `
+      <div class="overflow-menu" id="overflowMenu">
+        <div class="overflow-item" id="kitchenModeItem">${state.kitchenMode?'🔆 Küchenmodus ausschalten':'🔆 Küchenmodus einschalten'}</div>
+        <div class="overflow-item" id="guestModeItem">Gäste-Ansicht öffnen</div>
       </div>
-      <div class="settings-field">
-        <label for="datumInput">Datum</label>
-        <input type="date" id="datumInput" value="${settings.datum}">
+    `;
+  }
+
+  const showSettings = state.tab==='ablauf' || state.tab==='einkauf';
+  if(showSettings){
+    html += `
+      <div class="settings-bar" style="--accent:${menu.accent}">
+        <div class="settings-field">
+          <label for="personenInput">Personen</label>
+          <input type="number" id="personenInput" min="1" max="60" value="${settings.personen}">
+        </div>
+        <div class="settings-field">
+          <label for="datumInput">Datum</label>
+          <input type="date" id="datumInput" value="${settings.datum}">
+        </div>
+        <div class="settings-field">
+          <label for="essenzeitInput">Essenzeit</label>
+          <input type="time" id="essenzeitInput" value="${settings.essenzeit}">
+        </div>
       </div>
-      <div class="settings-field">
-        <label for="essenzeitInput">Essenzeit</label>
-        <input type="time" id="essenzeitInput" value="${settings.essenzeit}">
-      </div>
-    </div>
-    <div class="settings-note">Basis laut Originalrezept: ${BASE_PERSONEN} Personen, Essenzeit ${BASE_ESSENZEIT} Uhr. Mengen und Zeitplan passen sich an.</div>
-    <div class="quote-block" style="--accent:${menu.accent}">${menu.quote}</div>
+      <div class="settings-note">Basis laut Originalrezept: ${BASE_PERSONEN} Personen, Essenzeit ${BASE_ESSENZEIT} Uhr. Mengen und Zeitplan passen sich an.</div>
+      ${isPast ? `<div class="date-warning">⚠️ Dieses Datum liegt in der Vergangenheit — Alarme und Gäste-Ansicht zeigen dann ein vergangenes Datum.</div>` : ''}
+    `;
+  }
+
+  if(state.tab==='ablauf'){
+    html += `<div class="quote-block" style="--accent:${menu.accent}">${menu.quote}</div>`;
+  }
+
+  html += `
     <div class="tabs">
-      <div class="tab ${state.tab==='vortag'?'active':''}" data-tab="vortag" style="${state.tab==='vortag'?`background:${menu.accent}`:''}">Vortag</div>
-      <div class="tab ${state.tab==='tag'?'active':''}" data-tab="tag" style="${state.tab==='tag'?`background:${menu.accent}`:''}">Zeitplan</div>
-      <div class="tab ${state.tab==='focus'?'active':''}" data-tab="focus" style="${state.tab==='focus'?`background:${menu.accent}`:''}">Fokus</div>
+      <div class="tab ${state.tab==='ablauf'?'active':''}" data-tab="ablauf" style="${state.tab==='ablauf'?`background:${menu.accent}`:''}">Ablauf</div>
       <div class="tab ${state.tab==='einkauf'?'active':''}" data-tab="einkauf" style="${state.tab==='einkauf'?`background:${menu.accent}`:''}">Einkauf</div>
       <div class="tab ${state.tab==='quellen'?'active':''}" data-tab="quellen" style="${state.tab==='quellen'?`background:${menu.accent}`:''}">Quellen</div>
     </div>
   `;
 
-  if(state.tab==='vortag'){
+  if(state.tab==='ablauf'){
+    const steps = allFocusSteps(menu);
+    const doneCount = steps.filter(s=>set.has(s.key)).length;
+    const ctaLabel = doneCount===0 ? 'Los geht\'s →' : (doneCount>=steps.length ? 'Nochmal von vorn →' : 'Weitermachen →');
+    html += `
+      <div class="focus-cta" style="--accent:${menu.accent}">
+        <p>Schritt für Schritt durch Vorbereitung und Zeitplan, mit Timern für Warte- und Garzeiten.</p>
+        <button class="btn primary" id="startFocusBtn" style="background:${menu.accent}; border-color:${menu.accent};">${ctaLabel}</button>
+      </div>
+    `;
+
+    html += `<div class="section-heading">Am Vortag</div>`;
     html += `<div class="section-block" style="--accent:${menu.accent}">`;
     menu.prep.forEach((d, di)=>{
       html += `<div class="dish-block"><h4>${d.dish}</h4><p class="ingredients">${scaleIngredientLine(d.ing, factor)}</p>`;
@@ -1041,7 +1109,8 @@ function renderDetail(){
       html += `</div>`;
     });
     html += `</div>`;
-  } else if(state.tab==='tag'){
+
+    html += `<div class="section-heading">Am Tag · ${formatDateDE(settings.datum)}</div>`;
     html += `<div class="section-block" style="--accent:${menu.accent}">`;
     menu.timeline.forEach((row, ti)=>{
       const key = stepKey(menu.id,'tag',ti);
@@ -1063,41 +1132,6 @@ function renderDetail(){
         <div class="settings-note" style="margin:8px 0 0;">Lädt eine Kalenderdatei mit Erinnerung zu jedem Schritt herunter, für den ${formatDateDE(settings.datum)}. Dein Handy kann keine echten System-Alarme direkt aus dem Browser stellen, aber der Kalender benachrichtigt dich zuverlässig zur richtigen Zeit.</div>
       </div>
     `;
-  } else if(state.tab==='focus'){
-    const steps = allFocusSteps(menu);
-    // find first not-done starting from focusIdx, else stay
-    let idx = Math.min(state.focusIdx, steps.length-1);
-    if(idx<0) idx=0;
-    const cur = steps[idx];
-    const done = cur ? set.has(cur.key) : false;
-    if(steps.length===0){
-      html += `<div class="focus-card">Keine Schritte vorhanden.</div>`;
-    } else {
-      const timerActive = timerState.key===cur.key;
-      html += `
-        <div class="focus-card" style="--accent:${menu.accent}">
-          <div class="fcount">Schritt ${idx+1} / ${steps.length} · ${cur.phase==='vortag' ? 'Am Vortag' : 'Am Tag'}</div>
-          ${cur.time ? `<div class="ftime">${shiftTime(cur.time, offset)} Uhr</div>` : ''}
-          <h3>${cur.title}</h3>
-          <p>${cur.text}</p>
-          ${cur.dur ? (
-            timerActive
-              ? `<div class="timer-display">${formatTimer(timerState.remaining)}</div>
-                 <div class="focus-nav" style="margin-bottom:16px;">
-                   <button class="btn" id="stopTimerBtn">Timer stoppen</button>
-                 </div>`
-              : `<div class="focus-nav" style="margin-bottom:16px;">
-                   <button class="btn" id="startTimerBtn" style="border-color:${menu.accent}; color:${menu.accent};">Timer starten (${cur.dur} Min)</button>
-                 </div>`
-          ) : ''}
-          <div class="focus-nav">
-            <button class="btn" id="prevBtn" ${idx===0?'disabled':''}>‹ Zurück</button>
-            <button class="btn primary" id="doneBtn" style="background:${menu.accent}; border-color:${menu.accent}">${done?'✓ Erledigt':'Erledigt'}</button>
-            <button class="btn" id="nextBtn" ${idx===steps.length-1?'disabled':''}>Weiter ›</button>
-          </div>
-        </div>
-      `;
-    }
   } else if(state.tab==='einkauf'){
     const shopSet = shoppingCache[menu.id] || new Set();
     const items = consolidatedShoppingList(menu, factor);
@@ -1150,16 +1184,33 @@ function renderDetail(){
   document.getElementById('backBtn').addEventListener('click', ()=>{
     state.view='home'; render();
   });
-  const guestModeBtn = document.getElementById('guestModeBtn');
-  if(guestModeBtn) guestModeBtn.addEventListener('click', ()=>{
+  const overflowBtn = document.getElementById('overflowBtn');
+  if(overflowBtn) overflowBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    state.overflowOpen = !state.overflowOpen;
+    render();
+  });
+  const guestModeItem = document.getElementById('guestModeItem');
+  if(guestModeItem) guestModeItem.addEventListener('click', ()=>{
+    state.overflowOpen = false;
     state.view='guest'; render();
   });
-  const kitchenModeBtn = document.getElementById('kitchenModeBtn');
-  if(kitchenModeBtn) kitchenModeBtn.addEventListener('click', async ()=>{
+  const kitchenModeItem = document.getElementById('kitchenModeItem');
+  if(kitchenModeItem) kitchenModeItem.addEventListener('click', async ()=>{
     state.kitchenMode = !state.kitchenMode;
     localStorage.setItem('kitchenMode', state.kitchenMode ? '1' : '0');
     document.body.classList.toggle('kitchen-mode', state.kitchenMode);
     if(state.kitchenMode) await enableWakeLock(); else disableWakeLock();
+    state.overflowOpen = false;
+    render();
+  });
+  const startFocusBtn = document.getElementById('startFocusBtn');
+  if(startFocusBtn) startFocusBtn.addEventListener('click', ()=>{
+    const steps = allFocusSteps(menu);
+    let idx = steps.findIndex(s=>!set.has(s.key));
+    if(idx===-1) idx = 0;
+    state.focusIdx = idx;
+    state.view = 'focus';
     render();
   });
   const icsBtn = document.getElementById('icsBtn');
@@ -1222,29 +1273,84 @@ function renderDetail(){
       setTimeout(()=>{ copyListBtn.textContent = 'Liste kopieren'; }, 1800);
     }
   });
+}
 
-  if(state.tab==='focus'){
-    const steps = allFocusSteps(menu);
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const doneBtn = document.getElementById('doneBtn');
-    const startTimerBtn = document.getElementById('startTimerBtn');
-    const stopTimerBtn = document.getElementById('stopTimerBtn');
-    if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.focusIdx = Math.max(0, state.focusIdx-1); render(); });
-    if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.focusIdx = Math.min(steps.length-1, state.focusIdx+1); render(); });
-    if(doneBtn) doneBtn.addEventListener('click', async ()=>{
-      const idx = Math.min(state.focusIdx, steps.length-1);
-      const cur = steps[idx];
-      await toggleStep(menu, cur.key);
-      if(idx < steps.length-1){ state.focusIdx = idx+1; render(); }
-    });
-    if(startTimerBtn) startTimerBtn.addEventListener('click', ()=>{
-      const idx = Math.min(state.focusIdx, steps.length-1);
-      const cur = steps[idx];
-      startTimer(cur.key, cur.dur, menu.title+' — '+cur.title);
-    });
-    if(stopTimerBtn) stopTimerBtn.addEventListener('click', ()=>{ stopTimer(); render(); });
+function renderFocusView(){
+  const menu = MENUS.find(m=>m.id===state.menuId);
+  const set = progressCache[menu.id] || new Set();
+  const settings = settingsCache[menu.id] || {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT, datum:todayISODate()};
+  const offset = parseTimeStr(settings.essenzeit) - parseTimeStr(BASE_ESSENZEIT);
+  const steps = allFocusSteps(menu);
+  let idx = Math.min(state.focusIdx, steps.length-1);
+  if(idx<0) idx = 0;
+  const cur = steps[idx];
+  const done = cur ? set.has(cur.key) : false;
+
+  let html = `
+    <div class="topbar" style="--accent:${menu.accent}">
+      <button class="back-btn" id="backBtn">‹</button>
+      <div style="flex:1;">
+        <div class="topbar-title">Fokus-Modus</div>
+        <div class="topbar-sub">${menu.title}</div>
+      </div>
+    </div>
+    <div class="context-line">${settings.personen} Personen · ${formatDateDE(settings.datum)} · Essenzeit ${settings.essenzeit} Uhr</div>
+  `;
+
+  if(steps.length===0){
+    html += `<div class="focus-card">Keine Schritte vorhanden.</div>`;
+  } else {
+    const timerActive = timerState.key===cur.key;
+    html += `
+      <div class="focus-card" style="--accent:${menu.accent}">
+        <div class="fcount">Schritt ${idx+1} / ${steps.length} · ${cur.phase==='vortag' ? 'Am Vortag' : 'Am Tag'}</div>
+        ${cur.time ? `<div class="ftime">${shiftTime(cur.time, offset)} Uhr</div>` : ''}
+        <h3>${cur.title}</h3>
+        <p>${cur.text}</p>
+        ${cur.dur ? (
+          timerActive
+            ? `<div class="timer-display">${formatTimer(timerState.remaining)}</div>
+               <div class="focus-nav" style="margin-bottom:16px;">
+                 <button class="btn" id="stopTimerBtn">Timer stoppen</button>
+               </div>`
+            : `<div class="focus-nav" style="margin-bottom:16px;">
+                 <button class="btn" id="startTimerBtn" style="border-color:${menu.accent}; color:${menu.accent};">Timer starten (${cur.dur} Min)</button>
+               </div>`
+        ) : ''}
+        <div class="focus-nav">
+          <button class="btn" id="prevBtn" ${idx===0?'disabled':''}>‹ Zurück</button>
+          <button class="btn primary" id="doneBtn" style="background:${menu.accent}; border-color:${menu.accent}">${done?'✓ Erledigt':'Erledigt'}</button>
+          <button class="btn" id="nextBtn" ${idx===steps.length-1?'disabled':''}>Weiter ›</button>
+        </div>
+      </div>
+    `;
   }
+
+  appEl.innerHTML = html;
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    state.view = 'detail'; state.tab = 'ablauf'; render();
+  });
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const doneBtn = document.getElementById('doneBtn');
+  const startTimerBtn = document.getElementById('startTimerBtn');
+  const stopTimerBtn = document.getElementById('stopTimerBtn');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.focusIdx = Math.max(0, state.focusIdx-1); render(); });
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.focusIdx = Math.min(steps.length-1, state.focusIdx+1); render(); });
+  if(doneBtn) doneBtn.addEventListener('click', async ()=>{
+    const i = Math.min(state.focusIdx, steps.length-1);
+    const c = steps[i];
+    await toggleStep(menu, c.key);
+    if(i < steps.length-1){ state.focusIdx = i+1; render(); }
+  });
+  if(startTimerBtn) startTimerBtn.addEventListener('click', ()=>{
+    const i = Math.min(state.focusIdx, steps.length-1);
+    const c = steps[i];
+    startTimer(c.key, c.dur, menu.title+' — '+c.title);
+  });
+  if(stopTimerBtn) stopTimerBtn.addEventListener('click', ()=>{ stopTimer(); render(); });
 }
 
 function renderGuest(){
@@ -1302,10 +1408,18 @@ function renderGuest(){
 function render(){
   if(state.view==='home') renderHome();
   else if(state.view==='guest') renderGuest();
+  else if(state.view==='focus') renderFocusView();
   else renderDetail();
 }
 
 render();
+
+document.addEventListener('click', ()=>{
+  if(state.overflowOpen){
+    state.overflowOpen = false;
+    render();
+  }
+});
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
