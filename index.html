@@ -6,18 +6,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#EAE0C8">
-<meta name="description" content="Convivium: sechs historische Gastmähler zum Nachkochen — vom antiken Athen über Rom, Wikinger-Haithabu und Mittelalter bis zur Renaissance. Mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht.">
+<meta name="description" content="Tafelreise: sechs historische Gastmähler zum Nachkochen — vom antiken Athen über Rom, Wikinger-Haithabu und Mittelalter bis zur Renaissance. Mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht.">
 <meta name="keywords" content="historisches Kochen, Living History, Reenactment Rezepte, mittelalterliche Rezepte, antikes Rom Rezepte, Wikinger Essen, Renaissance Rezepte, Gastmahl, Dutch Oven Rezepte">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://convivium.afien1987.workers.dev/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Convivium — Eine kulinarische Zeitreise">
+<meta property="og:title" content="Tafelreise — Eine kulinarische Zeitreise">
 <meta property="og:description" content="Sechs historische Gastmähler zum Nachkochen, mit Quellenangaben, Einkaufsliste und Zeitplan: Antikes Griechenland, Rom, Haithabu, Hoch- & Spätmittelalter, Renaissance.">
 <meta property="og:url" content="https://convivium.afien1987.workers.dev/">
 <meta property="og:image" content="https://convivium.afien1987.workers.dev/icon-512.png">
 <meta property="og:locale" content="de_DE">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Convivium — Eine kulinarische Zeitreise">
+<meta name="twitter:title" content="Tafelreise — Eine kulinarische Zeitreise">
 <meta name="twitter:description" content="Sechs historische Gastmähler zum Nachkochen, mit Quellenangaben, Einkaufsliste und Zeitplan.">
 <meta name="twitter:image" content="https://convivium.afien1987.workers.dev/icon-512.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
@@ -25,7 +25,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
-<title>Convivium — Gastmähler</title>
+<title>Tafelreise — Gastmähler</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -341,7 +341,7 @@
 </head>
 <body>
 <div id="seo-fallback">
-  <h1>Convivium — Eine kulinarische Zeitreise</h1>
+  <h1>Tafelreise — Eine kulinarische Zeitreise</h1>
   <p>Sechs historische Gastmähler zum Nachkochen, mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht — von der griechischen Antike bis zur Renaissance.</p>
   <ul>
     <li><strong>Deipnon Attikon</strong> (Athen, ca. 400 v. Chr.) — Linsensuppe, Kandaulos und gebackener Fisch nach Athenaios und Archestratos.</li>
@@ -358,8 +358,8 @@
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "Convivium",
-  "alternateName": "Convivium — Eine kulinarische Zeitreise",
+  "name": "Tafelreise",
+  "alternateName": "Tafelreise — Eine kulinarische Zeitreise",
   "description": "Sechs historische Gastmähler zum Nachkochen, mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht — von der griechischen Antike bis zur Renaissance.",
   "applicationCategory": "LifestyleApplication",
   "operatingSystem": "Any",
@@ -887,7 +887,7 @@ function generateICS(menu, offset, datumStr){
   const now = new Date();
   const [y,mo,d] = (datumStr||todayISODate()).split('-').map(Number);
   const base = new Date(y, mo-1, d);
-  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Convivium//Gastmahl//DE\r\nCALSCALE:GREGORIAN\r\n';
+  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Tafelreise//Gastmahl//DE\r\nCALSCALE:GREGORIAN\r\n';
   menu.timeline.forEach((row, i)=>{
     const t = shiftTime(row.t, offset);
     const [h,m] = t.split(':').map(Number);
@@ -1044,7 +1044,7 @@ const appEl = document.getElementById('app');
 function renderHome(){
   let html = `
     <div class="home-hero">
-      <div class="eyebrow">Convivium</div>
+      <div class="eyebrow">Tafelreise</div>
       <h1>Sechs Gastmähler</h1>
       <p>Eine kulinarische Zeitreise von der Antike bis zur Renaissance. Wähle ein Gastmahl und arbeite Vorbereitung und Zeitplan Schritt für Schritt ab.</p>
     </div>
@@ -1064,8 +1064,8 @@ function renderHome(){
     `;
   });
   html += `</div>
-    <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Convivium wie eine eigene App.
-      <br><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Convivium? Kauf mir einen Kaffee</a>
+    <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Tafelreise wie eine eigene App.
+      <br><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a>
     </div>
   `;
   appEl.innerHTML = html;
@@ -1447,7 +1447,7 @@ function renderGuest(){
       <div class="guest-actions">
         <button class="btn" id="shareBtn" style="border-color:${menu.accent}; color:${menu.accent};">Teilen</button>
       </div>
-      <div class="footer-note"><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Convivium? Kauf mir einen Kaffee</a></div>
+      <div class="footer-note"><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a></div>
     </div>
   `;
   appEl.innerHTML = html;

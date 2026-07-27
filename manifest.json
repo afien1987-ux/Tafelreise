@@ -1,6 +1,6 @@
 {
-  "name": "Convivium — Gastmähler",
-  "short_name": "Convivium",
+  "name": "Tafelreise — Gastmähler",
+  "short_name": "Tafelreise",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
