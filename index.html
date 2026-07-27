@@ -338,6 +338,13 @@
     text-decoration:none; border-bottom:1px dotted var(--line);
   }
   .kofi-link:hover{ color:var(--ink); }
+  .legal-links{ margin-top:8px; font-size:12px; }
+  .legal-links a{ color:var(--ink-soft); text-decoration:underline; margin:0 4px; }
+  .legal-page{ padding:20px; max-width:640px; margin:0 auto; }
+  .legal-page h2{ font-size:20px; margin:26px 0 8px; }
+  .legal-page h2:first-of-type{ margin-top:6px; }
+  .legal-page p{ font-size:14.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 12px; }
+  .legal-page a{ color:var(--ink); }
 </style>
 </head>
 <body>
@@ -1067,9 +1074,16 @@ function renderHome(){
   html += `</div>
     <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Tafelreise wie eine eigene App.
       <br><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a>
+      <br><a class="kofi-link" href="${FEEDBACK_MAILTO}">✉️ Feedback geben</a>
+      <div class="legal-links"><a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
     </div>
   `;
   appEl.innerHTML = html;
+  const legalLink = document.getElementById('legalLink');
+  if(legalLink) legalLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    state.view = 'legal'; render();
+  });
 
   document.querySelectorAll('.menu-card').forEach(card=>{
     card.addEventListener('click', async ()=>{
@@ -1106,6 +1120,8 @@ function renderDetail(){
       <div class="overflow-menu" id="overflowMenu">
         <div class="overflow-item" id="kitchenModeItem">${state.kitchenMode?'🔆 Küchenmodus ausschalten':'🔆 Küchenmodus einschalten'}</div>
         <div class="overflow-item" id="guestModeItem">Gäste-Ansicht öffnen</div>
+        <div class="overflow-item"><a href="${FEEDBACK_MAILTO}" style="color:inherit; text-decoration:none; display:block;">✉️ Feedback geben</a></div>
+        <div class="overflow-item" id="legalItem">Impressum &amp; Datenschutz</div>
       </div>
     `;
   }
@@ -1267,6 +1283,11 @@ function renderDetail(){
     state.overflowOpen = false;
     render();
   });
+  const legalItem = document.getElementById('legalItem');
+  if(legalItem) legalItem.addEventListener('click', ()=>{
+    state.overflowOpen = false;
+    state.view = 'legal'; render();
+  });
   const startFocusBtn = document.getElementById('startFocusBtn');
   if(startFocusBtn) startFocusBtn.addEventListener('click', ()=>{
     const steps = allFocusSteps(menu);
@@ -1416,6 +1437,77 @@ function renderFocusView(){
   if(stopTimerBtn) stopTimerBtn.addEventListener('click', ()=>{ stopTimer(); render(); });
 }
 
+const FEEDBACK_MAILTO = 'mailto:a.fien@gmx.de?subject=Feedback%20zu%20Tafelreise';
+
+function renderLegal(){
+  const html = `
+    <div class="topbar">
+      <button class="back-btn" id="backBtn">‹</button>
+      <div><div class="topbar-title">Impressum &amp; Datenschutz</div></div>
+    </div>
+    <div class="legal-page">
+      <h2>Impressum</h2>
+      <p>Angaben gemäß § 5 TMG / § 18 MStV</p>
+      <p>
+        Adrian Helmut Thorsten Fien<br>
+        Steinstraße 14<br>
+        78467 Konstanz<br>
+        Deutschland
+      </p>
+      <p>Kontakt: <a href="mailto:a.fien@gmx.de">a.fien@gmx.de</a></p>
+      <p>Verantwortlich für den Inhalt: Adrian Helmut Thorsten Fien (Anschrift wie oben).</p>
+      <p>Tafelreise ist ein privates, nicht-kommerzielles Hobby-Projekt. Über den Ko-fi-Link
+      kann freiwillig eine kleine Unterstützung gegeben werden; ein Kauf oder eine
+      Gegenleistung ist damit nicht verbunden.</p>
+
+      <h2>Datenschutzerklärung</h2>
+      <p><strong>1. Verantwortlicher</strong><br>
+      Adrian Helmut Thorsten Fien, Steinstraße 14, 78467 Konstanz,
+      <a href="mailto:a.fien@gmx.de">a.fien@gmx.de</a></p>
+
+      <p><strong>2. Keine Datenerhebung durch die App selbst</strong><br>
+      Tafelreise speichert deinen Fortschritt, deine Einstellungen (Personen, Datum,
+      Essenzeit) und deine Einkaufsliste ausschließlich lokal auf deinem Gerät
+      (im sogenannten localStorage deines Browsers). Diese Daten werden zu keinem
+      Zeitpunkt an mich oder einen Server übertragen — ich habe keinen Zugriff darauf.
+      Es werden keine Cookies gesetzt und keine Analyse- oder Tracking-Tools eingesetzt.</p>
+
+      <p><strong>3. Hosting</strong><br>
+      Diese Seite wird über Cloudflare gehostet. Beim Aufruf verarbeitet Cloudflare
+      technisch notwendige Zugriffsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs) zum
+      Betrieb und zur Sicherheit der Infrastruktur. Näheres in der
+      <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Datenschutzerklärung von Cloudflare</a>.</p>
+
+      <p><strong>4. Feedback-Funktion</strong><br>
+      Der "Feedback"-Link öffnet dein eigenes E-Mail-Programm mit einer vorausgefüllten
+      Adresse. Ob und welche Angaben du dabei machst, entscheidest du selbst; die
+      Nachricht wird über dein eigenes E-Mail-Konto verschickt. Die Website selbst
+      erhebt dabei keine Daten.</p>
+
+      <p><strong>5. Ko-fi</strong><br>
+      Der "Kaffee spendieren"-Link führt zu ko-fi.com, einem Angebot von Ko-fi Labs
+      Limited. Sobald du diesen Link öffnest, gilt die
+      <a href="https://more.ko-fi.com/privacy-policy" target="_blank" rel="noopener">Datenschutzerklärung von Ko-fi</a>.
+      Ich erhalte von Ko-fi keine personenbezogenen Daten über einzelne
+      Unterstützer:innen, sofern du diese nicht selbst freiwillig mit mir teilst.</p>
+
+      <p><strong>6. Offline-Funktion (Service Worker)</strong><br>
+      Zur Offline-Nutzung speichert dein Browser die App-Dateien lokal zwischen
+      (Service-Worker-Cache). Dabei werden keine personenbezogenen Daten verarbeitet.</p>
+
+      <p><strong>7. Deine Rechte</strong><br>
+      Da keine personenbezogenen Daten bei mir gespeichert werden (außer du schreibst
+      mir aktiv eine E-Mail), entfallen die meisten Auskunfts- und Löschansprüche in
+      der Praxis von selbst. Für Fragen kannst du mich jederzeit unter
+      <a href="mailto:a.fien@gmx.de">a.fien@gmx.de</a> erreichen.</p>
+    </div>
+  `;
+  appEl.innerHTML = html;
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    state.view = 'home'; render();
+  });
+}
+
 function renderGuest(){
   const menu = MENUS.find(m=>m.id===state.menuId);
   const settings = settingsCache[menu.id] || {personen:BASE_PERSONEN, essenzeit:BASE_ESSENZEIT, datum:todayISODate()};
@@ -1448,10 +1540,17 @@ function renderGuest(){
       <div class="guest-actions">
         <button class="btn" id="shareBtn" style="border-color:${menu.accent}; color:${menu.accent};">Teilen</button>
       </div>
-      <div class="footer-note"><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a></div>
+      <div class="footer-note"><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a>
+        <div class="legal-links"><a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
+      </div>
     </div>
   `;
   appEl.innerHTML = html;
+  const legalLink = document.getElementById('legalLink');
+  if(legalLink) legalLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    state.view = 'legal'; render();
+  });
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
     state.view='detail'; render();
@@ -1473,6 +1572,7 @@ function render(){
   if(state.view==='home') renderHome();
   else if(state.view==='guest') renderGuest();
   else if(state.view==='focus') renderFocusView();
+  else if(state.view==='legal') renderLegal();
   else renderDetail();
 }
 
