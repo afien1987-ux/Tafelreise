@@ -726,6 +726,28 @@ let progressCache = {}; // menuId -> Set of completed keys
 let settingsCache = {}; // menuId -> {personen, essenzeit}
 let shoppingCache = {}; // menuId -> Set of checked ingredient keys
 
+// ---------- Navigation / Browser-Zurück-Button ----------
+function navSnapshot(){
+  return { view: state.view, menuId: state.menuId, tab: state.tab, focusIdx: state.focusIdx };
+}
+// Für echte Bildschirmwechsel (Home/Detail/Fokus/Gäste/Über/Legal) verwenden statt
+// direkter state-Zuweisung — legt einen Browser-Verlaufseintrag an, damit der
+// Zurück-Button (Hardware oder Geste) innerhalb der App navigiert statt sie zu schließen.
+function goTo(patch){
+  Object.assign(state, patch);
+  history.pushState(navSnapshot(), '');
+  render();
+}
+window.addEventListener('popstate', (e)=>{
+  if(e.state){
+    Object.assign(state, e.state);
+  } else {
+    state.view = 'home';
+  }
+  state.overflowOpen = false;
+  render();
+});
+
 // ---------- Küchenmodus (Bildschirm bleibt an, größere Schrift) ----------
 let wakeLock = null;
 async function enableWakeLock(){
@@ -1135,20 +1157,19 @@ function renderHome(){
   appEl.innerHTML = html;
   const aboutTeaser = document.getElementById('aboutTeaser');
   if(aboutTeaser) aboutTeaser.addEventListener('click', ()=>{
-    state.view = 'about'; render();
+    goTo({view:'about'});
   });
   const legalLink = document.getElementById('legalLink');
   if(legalLink) legalLink.addEventListener('click', (e)=>{
     e.preventDefault();
-    state.view = 'legal'; render();
+    goTo({view:'legal'});
   });
 
   document.querySelectorAll('.menu-card').forEach(card=>{
     card.addEventListener('click', async ()=>{
       const id = card.dataset.menu;
       await Promise.all([loadProgress(id), loadSettings(id), loadShopping(id)]);
-      state.view='detail'; state.menuId=id; state.tab='ablauf'; state.focusIdx=0;
-      render();
+      goTo({view:'detail', menuId:id, tab:'ablauf', focusIdx:0});
     });
   });
 }
@@ -1320,7 +1341,7 @@ function renderDetail(){
   appEl.innerHTML = html;
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
-    state.view='home'; render();
+    history.back();
   });
   const overflowBtn = document.getElementById('overflowBtn');
   if(overflowBtn) overflowBtn.addEventListener('click', (e)=>{
@@ -1331,7 +1352,7 @@ function renderDetail(){
   const guestModeItem = document.getElementById('guestModeItem');
   if(guestModeItem) guestModeItem.addEventListener('click', ()=>{
     state.overflowOpen = false;
-    state.view='guest'; render();
+    goTo({view:'guest'});
   });
   const kitchenModeItem = document.getElementById('kitchenModeItem');
   if(kitchenModeItem) kitchenModeItem.addEventListener('click', async ()=>{
@@ -1345,21 +1366,19 @@ function renderDetail(){
   const legalItem = document.getElementById('legalItem');
   if(legalItem) legalItem.addEventListener('click', ()=>{
     state.overflowOpen = false;
-    state.view = 'legal'; render();
+    goTo({view:'legal'});
   });
   const aboutItem = document.getElementById('aboutItem');
   if(aboutItem) aboutItem.addEventListener('click', ()=>{
     state.overflowOpen = false;
-    state.view = 'about'; render();
+    goTo({view:'about'});
   });
   const startFocusBtn = document.getElementById('startFocusBtn');
   if(startFocusBtn) startFocusBtn.addEventListener('click', ()=>{
     const steps = allFocusSteps(menu);
     let idx = steps.findIndex(s=>!set.has(s.key));
     if(idx===-1) idx = 0;
-    state.focusIdx = idx;
-    state.view = 'focus';
-    render();
+    goTo({view:'focus', focusIdx: idx});
   });
   const icsBtn = document.getElementById('icsBtn');
   if(icsBtn) icsBtn.addEventListener('click', ()=> downloadICS(menu, offset, settings.datum));
@@ -1477,7 +1496,7 @@ function renderFocusView(){
   appEl.innerHTML = html;
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
-    state.view = 'detail'; state.tab = 'ablauf'; render();
+    history.back();
   });
 
   const prevBtn = document.getElementById('prevBtn');
@@ -1558,7 +1577,7 @@ function renderAbout(){
   `;
   appEl.innerHTML = html;
   document.getElementById('backBtn').addEventListener('click', ()=>{
-    state.view = 'home'; render();
+    history.back();
   });
 }
 
@@ -1627,7 +1646,7 @@ function renderLegal(){
   `;
   appEl.innerHTML = html;
   document.getElementById('backBtn').addEventListener('click', ()=>{
-    state.view = 'home'; render();
+    history.back();
   });
 }
 
@@ -1675,16 +1694,16 @@ function renderGuest(){
   appEl.innerHTML = html;
   const aboutTeaser = document.getElementById('aboutTeaser');
   if(aboutTeaser) aboutTeaser.addEventListener('click', ()=>{
-    state.view = 'about'; render();
+    goTo({view:'about'});
   });
   const legalLink = document.getElementById('legalLink');
   if(legalLink) legalLink.addEventListener('click', (e)=>{
     e.preventDefault();
-    state.view = 'legal'; render();
+    goTo({view:'legal'});
   });
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
-    state.view='detail'; render();
+    history.back();
   });
   const shareBtn = document.getElementById('shareBtn');
   if(shareBtn) shareBtn.addEventListener('click', async ()=>{
@@ -1709,6 +1728,7 @@ function render(){
 }
 
 render();
+history.replaceState(navSnapshot(), '');
 
 document.addEventListener('click', ()=>{
   if(state.overflowOpen){
