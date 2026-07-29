@@ -2,10 +2,12 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#EAE0C8">
+<meta name="color-scheme" content="light">
 <meta name="description" content="Tafelreise: sechs historische Gastmähler zum Nachkochen — vom antiken Athen über Rom, Wikinger-Haithabu und Mittelalter bis zur Renaissance. Mit Einkaufsliste, Zeitplan und Quellenangaben zu jedem Gericht.">
 <meta name="keywords" content="historisches Kochen, Living History, Reenactment Rezepte, mittelalterliche Rezepte, antikes Rom Rezepte, Wikinger Essen, Renaissance Rezepte, Gastmahl, Dutch Oven Rezepte">
 <meta name="robots" content="index, follow">
@@ -37,9 +39,18 @@
     --ink-soft:#5A5040;
     --line:#C9BB98;
     --card:#F3ECD8;
+    color-scheme:light;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+  :focus-visible{
+    outline:2px solid var(--accent, #8B5E34); outline-offset:2px; border-radius:2px;
+  }
   body{
     background:var(--parchment);
     background-image:
@@ -49,6 +60,7 @@
     font-family:'EB Garamond', serif;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
   }
   h1,h2,h3,.display{font-family:'Cormorant Garamond', serif;}
   .mono{font-family:'JetBrains Mono', monospace; letter-spacing:0.02em;}
@@ -63,15 +75,17 @@
     position:sticky; top:0; z-index:10;
     background:var(--parchment);
     border-bottom:1px solid var(--line);
-    padding:18px 20px 14px;
+    padding:calc(18px + env(safe-area-inset-top)) 20px 14px;
     display:flex; align-items:center; gap:12px;
   }
   .back-btn{
     background:none; border:1px solid var(--line); color:var(--ink);
     width:36px; height:36px; border-radius:50%; font-size:18px;
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; flex-shrink:0;
+    cursor:pointer; flex-shrink:0; position:relative;
   }
+  .back-btn::before{ content:''; position:absolute; inset:-6px; } /* Tap-Fläche ~48px */
+  .back-btn:active{ background:var(--parchment-deep); }
   .topbar-title{font-size:22px; font-weight:600; line-height:1.1;}
   .topbar-sub{font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;}
 
@@ -153,9 +167,10 @@
     flex:1; text-align:center; padding:10px 2px; font-size:10.5px;
     font-family:'JetBrains Mono', monospace; letter-spacing:0.01em;
     text-transform:uppercase; cursor:pointer; color:var(--ink-soft);
-    background:var(--parchment);
+    background:var(--parchment); min-height:44px; display:flex; align-items:center; justify-content:center;
   }
   .tab.active{background:var(--accent, #8B5E34); color:#F3ECD8;}
+  .tab:not(.active):active{ background:var(--parchment-deep); }
 
   .section-block{padding:8px 20px 4px;}
   .dish-block{
@@ -174,17 +189,21 @@
     width:22px; height:22px; border:1.5px solid var(--accent, #8B5E34);
     border-radius:50%; flex-shrink:0; margin-top:2px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
-    background:var(--parchment);
+    background:var(--parchment); position:relative;
   }
+  .checkbox::before{ content:''; position:absolute; inset:-11px; } /* vergrößert die Tap-Fläche auf ~44px, ohne die Optik zu verändern */
+  .checkbox:active{ transform:scale(0.85); }
   .checkbox.done{background:var(--accent, #8B5E34);}
   .checkbox.done::after{content:'✓'; color:#F3ECD8; font-size:13px; line-height:1;}
   .step-text{font-size:15.5px; line-height:1.4; cursor:pointer;}
   .step-text.done{color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--line);}
+  .step-text:active{ opacity:0.65; }
 
   .timeline-row{
-    display:flex; gap:14px; padding:12px 0; border-top:1px solid var(--line);
+    display:flex; gap:14px; padding:12px 0; border-top:1px solid var(--line); cursor:pointer;
   }
   .timeline-row:first-of-type{border-top:none;}
+  .timeline-row:active{ background:var(--parchment-deep); }
   .time-mark{
     font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:500;
     color:var(--accent, #8B5E34); width:44px; flex-shrink:0; padding-top:1px;
@@ -215,9 +234,11 @@
     border:1px solid var(--accent,#8B5E34); background:none; color:var(--accent,#8B5E34);
     padding:11px 20px; border-radius:2px; font-family:'JetBrains Mono',monospace;
     font-size:13px; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer;
+    min-height:44px;
   }
   .btn.primary{background:var(--accent,#8B5E34); color:#F3ECD8;}
   .btn:disabled{opacity:0.35; cursor:default;}
+  .btn:active:not(:disabled){ opacity:0.7; transform:scale(0.98); }
 
   .score-badge{
     display:inline-flex; align-items:center; gap:6px;
@@ -280,7 +301,10 @@
     background:none; border:1px solid var(--line); color:var(--ink);
     width:36px; height:36px; border-radius:50%; font-size:20px; line-height:1;
     display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+    position:relative;
   }
+  .overflow-btn::before{ content:''; position:absolute; inset:-6px; }
+  .overflow-btn:active{ background:var(--parchment-deep); }
   .overflow-menu{
     position:fixed; top:64px; right:20px; z-index:150; min-width:210px;
     background:var(--card); border:1px solid var(--line); border-radius:4px;
@@ -446,7 +470,7 @@ const MENUS = [
     era:'Athen · ca. 400 v. Chr.',
     title:'Deipnon Attikon',
     sub:'Fisch, Käse und Linsen im klassischen Athen',
-    accent:'#6B7B58',
+    accent:'#556246',
     quote:'„Wenn du gelernt hättest, von Linsen zu leben, müsstest du keinem Tyrannen schmeicheln.“ — Diogenes zu Aristippos',
     courses:[
       {name:'Phake mit Maza', desc:'Linsensuppe mit Lauch und Koriander, dazu Gerstenfladen'},
@@ -574,7 +598,7 @@ const MENUS = [
     era:'Süddeutschland · ca. 1200',
     title:'Gastmahl im Hochmittelalter',
     sub:'Im Haus eines wohlhabenden Kaufmanns',
-    accent:'#8B5E34',
+    accent:'#7D542E',
     quote:'Pfeffer war so kostbar, dass man ihn zuweilen wie Silber wog — ein Gewürz aus dem Orient auf einem heimischen Teller.',
     courses:[
       {name:'Grüner Kräuterkäse', desc:'Quark und Frischkäse mit Kräutern und Walnüssen, dazu Bauernbrot'},
@@ -659,7 +683,7 @@ const MENUS = [
     era:'Süddeutschland · ca. 1580',
     title:'Gastmahl der Renaissance',
     sub:'Nach Art des Marx Rumpolt, Küchenmeister der Kurfürsten',
-    accent:'#B8862B',
+    accent:'#77571B',
     quote:'Zucker war im 16. Jahrhundert noch ein Gewürz, kein Süßstoff — man streute ihn über Fleisch wie über Obst.',
     courses:[
       {name:'Salat nach Rumpolt', desc:'Kopfsalat mit Kapern, dazu hartgekochte Eier mit Petersilie und Essig, sowie Weißbrot'},
@@ -1113,6 +1137,22 @@ async function toggleStep(menu, key){
   render();
 }
 
+function lightTap(){
+  if(navigator.vibrate){ try{ navigator.vibrate(8); }catch(e){} }
+}
+// Bindet Klick + Tastatur (Enter/Leertaste) an ein Element mit role="checkbox"/"button",
+// inkl. dezentem haptischem Feedback — macht abhakbare Zeilen mit Tastatur bedienbar.
+function bindCheckable(el, handler){
+  el.addEventListener('click', ()=>{ lightTap(); handler(); });
+  el.addEventListener('keydown', (e)=>{
+    if(e.key===' ' || e.key==='Enter'){
+      e.preventDefault();
+      lightTap();
+      handler();
+    }
+  });
+}
+
 function pctFor(menu){
   const set = progressCache[menu.id];
   if(!set) return 0;
@@ -1135,7 +1175,7 @@ function renderHome(){
   MENUS.forEach(m=>{
     const pct = pctFor(m);
     html += `
-      <div class="menu-card" style="--accent:${m.accent}; --pct:${pct}" data-menu="${m.id}">
+      <div class="menu-card" style="--accent:${m.accent}; --pct:${pct}" data-menu="${m.id}" role="button" tabindex="0" aria-label="${m.title} öffnen, ${pct} Prozent erledigt">
         <div class="seal"><span>${pct}%</span></div>
         <div class="meta">
           <div class="era">${m.era}</div>
@@ -1146,7 +1186,7 @@ function renderHome(){
     `;
   });
   html += `</div>
-    <div class="about-teaser" id="aboutTeaser">
+    <div class="about-teaser" id="aboutTeaser" role="button" tabindex="0">
       <span class="teaser-icon">📜</span>
       <span>Über Tafelreise — warum es diese App gibt</span>
     </div>
@@ -1156,9 +1196,7 @@ function renderHome(){
   `;
   appEl.innerHTML = html;
   const aboutTeaser = document.getElementById('aboutTeaser');
-  if(aboutTeaser) aboutTeaser.addEventListener('click', ()=>{
-    goTo({view:'about'});
-  });
+  if(aboutTeaser) bindCheckable(aboutTeaser, ()=> goTo({view:'about'}));
   const legalLink = document.getElementById('legalLink');
   if(legalLink) legalLink.addEventListener('click', (e)=>{
     e.preventDefault();
@@ -1166,7 +1204,7 @@ function renderHome(){
   });
 
   document.querySelectorAll('.menu-card').forEach(card=>{
-    card.addEventListener('click', async ()=>{
+    bindCheckable(card, async ()=>{
       const id = card.dataset.menu;
       await Promise.all([loadProgress(id), loadSettings(id), loadShopping(id)]);
       goTo({view:'detail', menuId:id, tab:'ablauf', focusIdx:0});
@@ -1185,23 +1223,23 @@ function renderDetail(){
 
   let html = `
     <div class="topbar" style="--accent:${menu.accent}">
-      <button class="back-btn" id="backBtn">‹</button>
+      <button class="back-btn" id="backBtn" aria-label="Zurück">‹</button>
       <div style="flex:1;">
         <div class="topbar-title">${menu.title}</div>
         <div class="topbar-sub">${menu.era} · ${pct}% erledigt</div>
       </div>
-      <button class="overflow-btn" id="overflowBtn">⋮</button>
+      <button class="overflow-btn" id="overflowBtn" aria-label="Weitere Optionen" aria-haspopup="true">⋮</button>
     </div>
   `;
 
   if(state.overflowOpen){
     html += `
       <div class="overflow-menu" id="overflowMenu">
-        <div class="overflow-item" id="kitchenModeItem">${state.kitchenMode?'🔆 Küchenmodus ausschalten':'🔆 Küchenmodus einschalten'}</div>
-        <div class="overflow-item" id="guestModeItem">Gäste-Ansicht öffnen</div>
+        <div class="overflow-item" id="kitchenModeItem" role="menuitem" tabindex="0">${state.kitchenMode?'🔆 Küchenmodus ausschalten':'🔆 Küchenmodus einschalten'}</div>
+        <div class="overflow-item" id="guestModeItem" role="menuitem" tabindex="0">Gäste-Ansicht öffnen</div>
         <div class="overflow-item"><a href="${FEEDBACK_MAILTO}" style="color:inherit; text-decoration:none; display:block;">✉️ Feedback geben</a></div>
-        <div class="overflow-item" id="aboutItem">Über Tafelreise</div>
-        <div class="overflow-item" id="legalItem">Impressum &amp; Datenschutz</div>
+        <div class="overflow-item" id="aboutItem" role="menuitem" tabindex="0">Über Tafelreise</div>
+        <div class="overflow-item" id="legalItem" role="menuitem" tabindex="0">Impressum &amp; Datenschutz</div>
       </div>
     `;
   }
@@ -1234,9 +1272,9 @@ function renderDetail(){
 
   html += `
     <div class="tabs">
-      <div class="tab ${state.tab==='ablauf'?'active':''}" data-tab="ablauf" style="${state.tab==='ablauf'?`background:${menu.accent}`:''}">Ablauf</div>
-      <div class="tab ${state.tab==='einkauf'?'active':''}" data-tab="einkauf" style="${state.tab==='einkauf'?`background:${menu.accent}`:''}">Einkauf</div>
-      <div class="tab ${state.tab==='quellen'?'active':''}" data-tab="quellen" style="${state.tab==='quellen'?`background:${menu.accent}`:''}">Quellen</div>
+      <div class="tab ${state.tab==='ablauf'?'active':''}" data-tab="ablauf" role="tab" aria-selected="${state.tab==='ablauf'}" tabindex="0" style="${state.tab==='ablauf'?`background:${menu.accent}`:''}">Ablauf</div>
+      <div class="tab ${state.tab==='einkauf'?'active':''}" data-tab="einkauf" role="tab" aria-selected="${state.tab==='einkauf'}" tabindex="0" style="${state.tab==='einkauf'?`background:${menu.accent}`:''}">Einkauf</div>
+      <div class="tab ${state.tab==='quellen'?'active':''}" data-tab="quellen" role="tab" aria-selected="${state.tab==='quellen'}" tabindex="0" style="${state.tab==='quellen'?`background:${menu.accent}`:''}">Quellen</div>
     </div>
   `;
 
@@ -1260,7 +1298,7 @@ function renderDetail(){
         const done = set.has(key);
         html += `
           <div class="step-row">
-            <div class="checkbox ${done?'done':''}" data-key="${key}" style="--accent:${menu.accent}"></div>
+            <div class="checkbox ${done?'done':''}" data-key="${key}" style="--accent:${menu.accent}" role="checkbox" aria-checked="${done}" aria-label="${s.replace(/"/g,'&quot;')}" tabindex="0"></div>
             <div class="step-text ${done?'done':''}" data-key="${key}">${s}</div>
           </div>
         `;
@@ -1275,7 +1313,7 @@ function renderDetail(){
       const key = stepKey(menu.id,'tag',ti);
       const done = set.has(key);
       html += `
-        <div class="timeline-row ${done?'done':''}" data-key="${key}" style="cursor:pointer;">
+        <div class="timeline-row ${done?'done':''}" data-key="${key}" style="cursor:pointer;" role="checkbox" aria-checked="${done}" aria-label="${shiftTime(row.t, offset)} Uhr — ${row.h}" tabindex="0">
           <div class="time-mark">${shiftTime(row.t, offset)}</div>
           <div class="timeline-body">
             <h5>${row.h}</h5>
@@ -1299,7 +1337,7 @@ function renderDetail(){
       const done = shopSet.has(item.key);
       html += `
         <div class="step-row">
-          <div class="checkbox shop-checkbox ${done?'done':''}" data-key="${item.key}" style="--accent:${menu.accent}"></div>
+          <div class="checkbox shop-checkbox ${done?'done':''}" data-key="${item.key}" style="--accent:${menu.accent}" role="checkbox" aria-checked="${done}" aria-label="${item.text.replace(/"/g,'&quot;')}" tabindex="0"></div>
           <div class="step-text shop-text ${done?'done':''}" data-key="${item.key}">${item.text}</div>
         </div>
       `;
@@ -1350,12 +1388,12 @@ function renderDetail(){
     render();
   });
   const guestModeItem = document.getElementById('guestModeItem');
-  if(guestModeItem) guestModeItem.addEventListener('click', ()=>{
+  if(guestModeItem) bindCheckable(guestModeItem, ()=>{
     state.overflowOpen = false;
     goTo({view:'guest'});
   });
   const kitchenModeItem = document.getElementById('kitchenModeItem');
-  if(kitchenModeItem) kitchenModeItem.addEventListener('click', async ()=>{
+  if(kitchenModeItem) bindCheckable(kitchenModeItem, async ()=>{
     state.kitchenMode = !state.kitchenMode;
     localStorage.setItem('kitchenMode', state.kitchenMode ? '1' : '0');
     document.body.classList.toggle('kitchen-mode', state.kitchenMode);
@@ -1364,12 +1402,12 @@ function renderDetail(){
     render();
   });
   const legalItem = document.getElementById('legalItem');
-  if(legalItem) legalItem.addEventListener('click', ()=>{
+  if(legalItem) bindCheckable(legalItem, ()=>{
     state.overflowOpen = false;
     goTo({view:'legal'});
   });
   const aboutItem = document.getElementById('aboutItem');
-  if(aboutItem) aboutItem.addEventListener('click', ()=>{
+  if(aboutItem) bindCheckable(aboutItem, ()=>{
     state.overflowOpen = false;
     goTo({view:'about'});
   });
@@ -1383,18 +1421,26 @@ function renderDetail(){
   const icsBtn = document.getElementById('icsBtn');
   if(icsBtn) icsBtn.addEventListener('click', ()=> downloadICS(menu, offset, settings.datum));
   document.querySelectorAll('.tab').forEach(t=>{
-    t.addEventListener('click', ()=>{
-      state.tab = t.dataset.tab; render();
+    bindCheckable(t, ()=>{
+      state.tab = t.dataset.tab;
+      window.scrollTo(0,0);
+      render();
     });
   });
-  document.querySelectorAll('.checkbox:not(.shop-checkbox), .step-text:not(.shop-text)').forEach(el=>{
+  document.querySelectorAll('.checkbox:not(.shop-checkbox)').forEach(el=>{
+    bindCheckable(el, ()=> toggleStep(menu, el.dataset.key));
+  });
+  document.querySelectorAll('.step-text:not(.shop-text)').forEach(el=>{
     el.addEventListener('click', ()=> toggleStep(menu, el.dataset.key));
   });
-  document.querySelectorAll('.shop-checkbox, .shop-text').forEach(el=>{
+  document.querySelectorAll('.shop-checkbox').forEach(el=>{
+    bindCheckable(el, ()=> toggleShoppingItem(menu, el.dataset.key));
+  });
+  document.querySelectorAll('.shop-text').forEach(el=>{
     el.addEventListener('click', ()=> toggleShoppingItem(menu, el.dataset.key));
   });
   document.querySelectorAll('.timeline-row').forEach(el=>{
-    el.addEventListener('click', ()=> toggleStep(menu, el.dataset.key));
+    bindCheckable(el, ()=> toggleStep(menu, el.dataset.key));
   });
   const personenInput = document.getElementById('personenInput');
   const datumInput = document.getElementById('datumInput');
@@ -1455,7 +1501,7 @@ function renderFocusView(){
 
   let html = `
     <div class="topbar" style="--accent:${menu.accent}">
-      <button class="back-btn" id="backBtn">‹</button>
+      <button class="back-btn" id="backBtn" aria-label="Zurück">‹</button>
       <div style="flex:1;">
         <div class="topbar-title">Fokus-Modus</div>
         <div class="topbar-sub">${menu.title}</div>
@@ -1525,7 +1571,7 @@ const FEEDBACK_MAILTO = 'mailto:a.fien@gmx.de?subject=Feedback%20zu%20Tafelreise
 function renderAbout(){
   const html = `
     <div class="topbar">
-      <button class="back-btn" id="backBtn">‹</button>
+      <button class="back-btn" id="backBtn" aria-label="Zurück">‹</button>
       <div><div class="topbar-title">Über Tafelreise</div></div>
     </div>
 
@@ -1584,7 +1630,7 @@ function renderAbout(){
 function renderLegal(){
   const html = `
     <div class="topbar">
-      <button class="back-btn" id="backBtn">‹</button>
+      <button class="back-btn" id="backBtn" aria-label="Zurück">‹</button>
       <div><div class="topbar-title">Impressum &amp; Datenschutz</div></div>
     </div>
     <div class="legal-page">
@@ -1659,7 +1705,7 @@ function renderGuest(){
 
   let html = `
     <div class="topbar" style="--accent:${menu.accent}">
-      <button class="back-btn" id="backBtn">‹</button>
+      <button class="back-btn" id="backBtn" aria-label="Zurück">‹</button>
       <div><div class="topbar-title">Gäste-Ansicht</div><div class="topbar-sub">${menu.era}</div></div>
     </div>
     <div class="guest-page" style="--accent:${menu.accent}">
@@ -1682,7 +1728,7 @@ function renderGuest(){
       <div class="guest-actions">
         <button class="btn" id="shareBtn" style="border-color:${menu.accent}; color:${menu.accent};">Teilen</button>
       </div>
-      <div class="about-teaser" id="aboutTeaser">
+      <div class="about-teaser" id="aboutTeaser" role="button" tabindex="0">
         <span class="teaser-icon">📜</span>
         <span>Über Tafelreise — warum es diese App gibt</span>
       </div>
@@ -1693,9 +1739,7 @@ function renderGuest(){
   `;
   appEl.innerHTML = html;
   const aboutTeaser = document.getElementById('aboutTeaser');
-  if(aboutTeaser) aboutTeaser.addEventListener('click', ()=>{
-    goTo({view:'about'});
-  });
+  if(aboutTeaser) bindCheckable(aboutTeaser, ()=> goTo({view:'about'}));
   const legalLink = document.getElementById('legalLink');
   if(legalLink) legalLink.addEventListener('click', (e)=>{
     e.preventDefault();
