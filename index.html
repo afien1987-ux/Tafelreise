@@ -345,6 +345,50 @@
   .legal-page h2:first-of-type{ margin-top:6px; }
   .legal-page p{ font-size:14.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 12px; }
   .legal-page a{ color:var(--ink); }
+
+  .about-hero{
+    padding:36px 24px 20px; text-align:center;
+  }
+  .about-hero .seal-mark{
+    width:64px; height:64px; border-radius:50%;
+    background:conic-gradient(#B8862B 0 100%);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 16px; position:relative;
+  }
+  .about-hero .seal-mark::after{
+    content:'T'; font-family:'Cormorant Garamond', serif; font-weight:700;
+    font-size:30px; color:#EAE0C8; background:#7A2E2E;
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .about-hero h1{ font-size:30px; margin:0 0 8px; }
+  .about-hero p{ font-size:15px; color:var(--ink-soft); max-width:46ch; margin:0 auto; line-height:1.5; }
+
+  .about-pullquote{
+    margin:22px 24px; padding:18px 20px; border-left:2px solid #B8862B;
+    font-style:italic; font-size:16px; color:var(--ink-soft); line-height:1.5;
+  }
+
+  .about-section{ padding:8px 24px 4px; max-width:640px; margin:0 auto; }
+  .about-row{ display:flex; gap:16px; margin:22px 0; align-items:flex-start; }
+  .about-icon{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    background:var(--card); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:21px;
+  }
+  .about-row h3{ margin:2px 0 6px; font-size:19px; }
+  .about-row p{ margin:0; font-size:14.5px; color:var(--ink-soft); line-height:1.6; }
+
+  .about-divider{
+    width:40px; height:1px; background:var(--line); margin:30px auto;
+  }
+
+  .about-cta{
+    margin:24px 24px 8px; padding:20px; text-align:center;
+    background:var(--card); border:1px solid var(--line); border-radius:2px;
+  }
+  .about-cta p{ font-size:14px; color:var(--ink-soft); margin:0 0 14px; }
+  .about-cta-links{ display:flex; flex-direction:column; gap:10px; align-items:center; }
 </style>
 </head>
 <body>
@@ -1075,10 +1119,15 @@ function renderHome(){
     <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Tafelreise wie eine eigene App.
       <br><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a>
       <br><a class="kofi-link" href="${FEEDBACK_MAILTO}">✉️ Feedback geben</a>
-      <div class="legal-links"><a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
+      <div class="legal-links"><a href="#" id="aboutLink">Über Tafelreise</a> · <a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
     </div>
   `;
   appEl.innerHTML = html;
+  const aboutLink = document.getElementById('aboutLink');
+  if(aboutLink) aboutLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    state.view = 'about'; render();
+  });
   const legalLink = document.getElementById('legalLink');
   if(legalLink) legalLink.addEventListener('click', (e)=>{
     e.preventDefault();
@@ -1121,6 +1170,7 @@ function renderDetail(){
         <div class="overflow-item" id="kitchenModeItem">${state.kitchenMode?'🔆 Küchenmodus ausschalten':'🔆 Küchenmodus einschalten'}</div>
         <div class="overflow-item" id="guestModeItem">Gäste-Ansicht öffnen</div>
         <div class="overflow-item"><a href="${FEEDBACK_MAILTO}" style="color:inherit; text-decoration:none; display:block;">✉️ Feedback geben</a></div>
+        <div class="overflow-item" id="aboutItem">Über Tafelreise</div>
         <div class="overflow-item" id="legalItem">Impressum &amp; Datenschutz</div>
       </div>
     `;
@@ -1288,6 +1338,11 @@ function renderDetail(){
     state.overflowOpen = false;
     state.view = 'legal'; render();
   });
+  const aboutItem = document.getElementById('aboutItem');
+  if(aboutItem) aboutItem.addEventListener('click', ()=>{
+    state.overflowOpen = false;
+    state.view = 'about'; render();
+  });
   const startFocusBtn = document.getElementById('startFocusBtn');
   if(startFocusBtn) startFocusBtn.addEventListener('click', ()=>{
     const steps = allFocusSteps(menu);
@@ -1439,6 +1494,65 @@ function renderFocusView(){
 
 const FEEDBACK_MAILTO = 'mailto:a.fien@gmx.de?subject=Feedback%20zu%20Tafelreise';
 
+function renderAbout(){
+  const html = `
+    <div class="topbar">
+      <button class="back-btn" id="backBtn">‹</button>
+      <div><div class="topbar-title">Über Tafelreise</div></div>
+    </div>
+
+    <div class="about-hero">
+      <div class="seal-mark"></div>
+      <h1>Warum es Tafelreise gibt</h1>
+      <p>Ein Hobbykoch, ein IT-Berater, und die Frage: Was haben die Leute eigentlich früher über offenem Feuer gekocht?</p>
+    </div>
+
+    <div class="about-pullquote">„Früher musste man ja zwangsläufig alles über offenem Feuer kochen — was gibt's da eigentlich in der Geschichte, das ich nachkochen kann?“</div>
+
+    <div class="about-section">
+      <div class="about-row">
+        <div class="about-icon">🔥</div>
+        <div>
+          <h3>Vom Lagerfeuer zum Gastmahl</h3>
+          <p>Ich bin leidenschaftlicher Hobbykoch und koche besonders gerne über offenem Feuer — irgendwann hatte ich aber einfach keine Lust mehr, immer nur Gulasch, Schichtfleisch oder Rippchen zu machen. Gleichzeitig bin ich schon immer gerne auf Mittelaltermärkten unterwegs. Daraus entstand die Idee: Früher musste man zwangsläufig alles über offenem Feuer zubereiten — was gibt's da eigentlich in der Geschichte, das sich heute nachkochen lässt? Also hab ich angefangen, Rezepte zu recherchieren und nachzukochen, und fand's richtig cool, mit Freunden einen Gang durch die Epochen zu machen.</p>
+        </div>
+      </div>
+
+      <div class="about-divider"></div>
+
+      <div class="about-row">
+        <div class="about-icon">💻</div>
+        <div>
+          <h3>Vom Papier zur App</h3>
+          <p>Ich war früher Softwareentwickler, bin heute IT-Consultant, und hatte schon immer Lust, neue Technologien auszuprobieren. Als ich überlegt hab, wie ich KI sinnvoll für mich nutzen kann, kam mir unter anderem die Idee, dass ja auch meine Freunde immer wieder nach den Rezepten gefragt haben. Und mal ehrlich: PDFs hin- und herschicken ist einfach nicht geil. Also hab ich das digitalisiert — aber wollte kein reines PDF-Abbild als App, sondern mir überlegt, welche Features das wirklich zu einer echten Digitalisierung machen, statt nur einer digitalen Kopie.</p>
+        </div>
+      </div>
+
+      <div class="about-divider"></div>
+
+      <div class="about-row">
+        <div class="about-icon">📜</div>
+        <div>
+          <h3>Ehrlich zur Quellenlage</h3>
+          <p>Programmiert hab ich die App mit Unterstützung von KI (Claude) — die Recherche zu Rezepten und historischer Einordnung hab ich aber selbst gegengeprüft, nicht blind übernommen. Deshalb zeigt jedes Gastmahl offen, wie gut ein Gericht belegt ist: quellenbelegt, archäologisch plausibel, oder moderne Rekonstruktion. Zu finden im Tab "Quellen" bei jedem Menü.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-cta">
+      <p>Wenn dir Tafelreise gefällt oder du Fehler in der Quellenlage findest, freu ich mich über Nachricht oder Unterstützung.</p>
+      <div class="about-cta-links">
+        <a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Kaffee spendieren</a>
+        <a class="kofi-link" href="${FEEDBACK_MAILTO}">✉️ Feedback geben</a>
+      </div>
+    </div>
+  `;
+  appEl.innerHTML = html;
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    state.view = 'home'; render();
+  });
+}
+
 function renderLegal(){
   const html = `
     <div class="topbar">
@@ -1573,6 +1687,7 @@ function render(){
   else if(state.view==='guest') renderGuest();
   else if(state.view==='focus') renderFocusView();
   else if(state.view==='legal') renderLegal();
+  else if(state.view==='about') renderAbout();
   else renderDetail();
 }
 
