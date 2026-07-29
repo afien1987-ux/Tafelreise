@@ -389,6 +389,14 @@
   }
   .about-cta p{ font-size:14px; color:var(--ink-soft); margin:0 0 14px; }
   .about-cta-links{ display:flex; flex-direction:column; gap:10px; align-items:center; }
+
+  .about-teaser{
+    margin:20px 20px 4px; padding:15px 18px;
+    background:var(--card); border:1px solid var(--line); border-radius:2px;
+    display:flex; align-items:center; gap:13px; cursor:pointer; font-size:14.5px;
+  }
+  .about-teaser:active{ background:var(--parchment-deep); }
+  .about-teaser .teaser-icon{ font-size:21px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -1116,16 +1124,17 @@ function renderHome(){
     `;
   });
   html += `</div>
+    <div class="about-teaser" id="aboutTeaser">
+      <span class="teaser-icon">📜</span>
+      <span>Über Tafelreise — warum es diese App gibt</span>
+    </div>
     <div class="footer-note">Tipp: Über das Browser-Menü „Zum Startbildschirm hinzufügen“ wählen, dann startet Tafelreise wie eine eigene App.
-      <br><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a>
-      <br><a class="kofi-link" href="${FEEDBACK_MAILTO}">✉️ Feedback geben</a>
-      <div class="legal-links"><a href="#" id="aboutLink">Über Tafelreise</a> · <a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
+      <div class="legal-links"><a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
     </div>
   `;
   appEl.innerHTML = html;
-  const aboutLink = document.getElementById('aboutLink');
-  if(aboutLink) aboutLink.addEventListener('click', (e)=>{
-    e.preventDefault();
+  const aboutTeaser = document.getElementById('aboutTeaser');
+  if(aboutTeaser) aboutTeaser.addEventListener('click', ()=>{
     state.view = 'about'; render();
   });
   const legalLink = document.getElementById('legalLink');
@@ -1654,12 +1663,20 @@ function renderGuest(){
       <div class="guest-actions">
         <button class="btn" id="shareBtn" style="border-color:${menu.accent}; color:${menu.accent};">Teilen</button>
       </div>
-      <div class="footer-note"><a class="kofi-link" href="https://ko-fi.com/adrianfien" target="_blank" rel="noopener">☕ Gefällt dir Tafelreise? Kauf mir einen Kaffee</a>
+      <div class="about-teaser" id="aboutTeaser">
+        <span class="teaser-icon">📜</span>
+        <span>Über Tafelreise — warum es diese App gibt</span>
+      </div>
+      <div class="footer-note">
         <div class="legal-links"><a href="#" id="legalLink">Impressum &amp; Datenschutz</a></div>
       </div>
     </div>
   `;
   appEl.innerHTML = html;
+  const aboutTeaser = document.getElementById('aboutTeaser');
+  if(aboutTeaser) aboutTeaser.addEventListener('click', ()=>{
+    state.view = 'about'; render();
+  });
   const legalLink = document.getElementById('legalLink');
   if(legalLink) legalLink.addEventListener('click', (e)=>{
     e.preventDefault();
